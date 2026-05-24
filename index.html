@@ -1,133 +1,523 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>黒い砂漠 - 強化プランナー</title>
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=Share+Tech+Mono&display=swap');
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Share+Tech+Mono&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0d0f1a;--panel:#141624;--panel2:#1c1e30;--border:#2a2d42;
-  --text:#c8d0e8;--sub:#5a6080;--gold:#f0c060;--accent:#9b6fff;
-  --kara-neck:#e08040;--kara:#f0a060;--kunnou-m:#50c878;--kunnou-s:#3aa860;
-  --green:#50c878;--red:#e06060;
-}
-body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;min-height:100vh}
-h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-.app{display:grid;grid-template-columns:320px 1fr;min-height:100vh}
+  :root {
+    /* 黒い砂漠：ダークファンタジーパレット */
+    --bg-main: #121316;          /* 深い漆黒 */
+    --bg-panel: #1a1c21;         /* 石目調を模したベースパネル */
+    --bg-panel-light: #23262d;   /* 浮き上がらせるインナーパネル */
+    --border-metal: #383b42;     /* 鉄のような鈍い境界線 */
+    --border-gold: #b3975d;      /* 酸化したアンティークゴールド */
+    --text-normal: #cfd2dc;      /* 基本テキスト */
+    --text-dark: #7a7e8a;        /* 補助テキスト */
+    --gold-bright: #eec980;      /* 鮮やかなゴールド */
+    
+    /* 装備スロット固有カラー (視認性とゲーム内カラーの調和) */
+    --color-kara-neck: #ff8c42;  /* カラザド首：鮮烈なオレンジ */
+    --color-kara: #fca366;       /* カラザド他：柔らかな橙 */
+    --color-kunnou-m: #4ef083;   /* 君王メイン：冴えた古代緑 */
+    --color-kunnou-s: #3cb371;   /* 君王補助：深緑 */
+    
+    /* 演出カラー */
+    --btn-fire-start: #aa2f1d;
+    --btn-fire-end: #57130a;
+  }
 
-.sidebar{background:var(--panel);border-right:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-normal);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    /* 黒い砂漠の背景布のような薄い質感のテクスチャを再現 */
+    background-image: 
+      radial-gradient(circle at 50% 30%, #1e222b 0%, #121316 70%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: auto, 4px 4px, 4px 4px;
+  }
 
-.top-bar{background:var(--panel);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px}
-.top-bar .logo{font-size:16px;font-weight:700;color:var(--accent);letter-spacing:1px}
-.top-bar .sub{font-size:11px;color:var(--sub)}
+  /* アプリケーション外枠 */
+  .app-window {
+    width: 100%;
+    max-width: 1260px;
+    background: var(--bg-panel);
+    border: 1px solid #2e3036;
+    outline: 3px solid #111214;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+    position: relative;
+  }
 
-.right-panel{display:flex;flex-direction:column}
-.content{padding:16px;flex:1;overflow:auto}
+  /* ゲームウィンドウヘッダー風のバー */
+  .window-header {
+    background: linear-gradient(90deg, #16171b 0%, #282a33 50%, #16171b 100%);
+    border-bottom: 2px solid var(--border-gold);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  }
 
-.section-title{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px}
+  .window-header .title {
+    font-family: 'Cinzel', 'Noto Sans JP', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold-bright);
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(238, 201, 128, 0.3), 2px 2px 2px #000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-.price-grid{display:grid;grid-template-columns:1fr auto;gap:6px 8px;align-items:center}
-.price-label{font-size:12px;color:var(--text)}
-.price-input{background:var(--panel2);border:1px solid var(--border);color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:13px;padding:4px 8px;border-radius:4px;width:80px;text-align:right;outline:none}
-.price-input:focus{border-color:var(--accent)}
-.unit{font-size:11px;color:var(--sub);grid-column:2;text-align:right;margin-top:-4px}
+  .window-header .title::before, .window-header .title::after {
+    content: "♦";
+    font-size: 12px;
+    color: var(--border-gold);
+  }
 
-.checkbox-row{display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer}
-.checkbox-row input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
-.checkbox-row label{font-size:12px;cursor:pointer;color:var(--text)}
+  /* レイアウトコンテナ */
+  .app-container {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    min-height: 680px;
+  }
 
-.slot-table{width:100%;border-collapse:collapse}
-.slot-table th{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;padding:4px 6px;text-align:left;border-bottom:1px solid var(--border)}
-.slot-table td{padding:5px 6px;border-bottom:1px solid rgba(42,45,66,0.5)}
-.slot-name{font-size:12px}
-.kara-neck .slot-name{color:var(--kara-neck)}
-.kara .slot-name{color:var(--kara)}
-.kunnou-m .slot-name{color:var(--kunnou-m)}
-.kunnou-s .slot-name{color:var(--kunnou-s)}
+  /* 左サイドバー (操作・設定エリア) */
+  .sidebar {
+    background-color: #16171b;
+    border-right: 1px solid var(--border-metal);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
 
-select.challe-sel{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-size:12px;padding:3px 4px;border-radius:4px;outline:none;width:70px}
-select.challe-sel:focus{border-color:var(--accent)}
-.stack-val{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--gold);text-align:center;min-width:36px}
+  /* 右メインパネル (結果表示エリア) */
+  .main-panel {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(18, 19, 22, 0.4);
+  }
 
-.calc-btn{background:var(--accent);color:#fff;border:none;padding:10px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;width:100%;letter-spacing:0.5px;transition:background 0.15s}
-.calc-btn:hover{background:#8555ee}
-.calc-btn:active{background:#7040d0}
+  /* 黒い砂漠風のセクションボックス枠 */
+  .section-box {
+    background: var(--bg-panel-light);
+    border: 1px solid var(--border-metal);
+    padding: 14px;
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+  }
 
-.result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.result-title{font-size:14px;font-weight:700;color:var(--accent)}
-.hint{font-size:11px;color:var(--sub)}
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold-bright);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #33363f;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 
-table.results{width:100%;border-collapse:collapse;font-size:12px}
-table.results th{background:var(--panel2);padding:8px 10px;text-align:center;font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid var(--border);white-space:nowrap}
-table.results th:first-child{text-align:center;width:40px}
-table.results th:nth-child(2){text-align:left}
-table.results td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:center;transition:background 0.1s}
-table.results td:nth-child(2){text-align:left}
-table.results tr:hover td{background:rgba(155,111,255,0.05);cursor:pointer}
-.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700}
-.rank-1{background:#d4af37;color:#000}
-.rank-2{background:#a8a9ad;color:#000}
-.rank-3{background:#cd7f32;color:#000}
-.rank-n{background:var(--border);color:var(--sub)}
-.mono{font-family:'Share Tech Mono',monospace}
-.eff-bar{height:4px;border-radius:2px;background:var(--accent);margin-top:3px;min-width:2px}
-.empty-msg{text-align:center;padding:40px;color:var(--sub);font-size:13px}
-.tag-kara-neck{color:var(--kara-neck)}
-.tag-kara{color:var(--kara)}
-.tag-kunnou-m{color:var(--kunnou-m)}
-.tag-kunnou-s{color:var(--kunnou-s)}
-</style>
+  .section-title::before {
+    content: "";
+    display: inline-block;
+    width: 3px;
+    height: 11px;
+    background: var(--border-gold);
+  }
 
-<h2 class="sr-only">黒い砂漠 強化プランナー — スロットごとの強化効率を計算するツール</h2>
+  /* 単価入力グリッド */
+  .price-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 10px;
+    align-items: center;
+  }
 
-<div class="app">
-  <div class="sidebar">
-    <div>
-      <div class="section-title">素材単価 (M)</div>
-      <div class="price-grid">
-        <span class="price-label">精髄 (カラザド)</span>
-        <input class="price-input" id="p-kara" value="50" type="number" min="0">
-        <span></span><span class="unit">M</span>
-        <span class="price-label">太初 (君王)</span>
-        <input class="price-input" id="p-kunnou" value="60" type="number" min="0">
-        <span></span><span class="unit">M</span>
-        <span class="price-label">クロン</span>
-        <input class="price-input" id="p-cron" value="3" type="number" min="0">
-        <span></span><span class="unit">M</span>
-      </div>
-    </div>
-    <div>
-      <div class="section-title">オプション</div>
-      <div class="checkbox-row">
-        <input type="checkbox" id="use-kakusei">
-        <label for="use-kakusei">君王覚醒スロットを使う</label>
-      </div>
-    </div>
-    <div style="flex:1">
-      <div class="section-title">現在の装備段階</div>
-      <table class="slot-table">
-        <thead>
-          <tr>
-            <th>スロット</th>
-            <th style="text-align:center">段階</th>
-            <th style="text-align:center">次SP</th>
-          </tr>
-        </thead>
-        <tbody id="slot-tbody"></tbody>
-      </table>
-    </div>
-    <button class="calc-btn" onclick="calculate()">▶ コスパ計算</button>
+  .price-label {
+    font-size: 12px;
+    color: var(--text-normal);
+  }
+
+  .input-wrapper {
+    display: flex;
+    align-items: center;
+    background: #0f1013;
+    border: 1px solid #434754;
+    padding-right: 8px;
+    transition: border-color 0.2s;
+  }
+
+  .input-wrapper:focus-within {
+    border-color: var(--gold-bright);
+    box-shadow: 0 0 5px rgba(238, 201, 128, 0.2);
+  }
+
+  .price-input {
+    background: transparent;
+    border: none;
+    color: var(--gold-bright);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 6px 8px;
+    width: 80px;
+    text-align: right;
+    outline: none;
+  }
+
+  .unit {
+    font-size: 11px;
+    color: var(--text-dark);
+    font-weight: bold;
+  }
+
+  /* チェックボックス */
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-normal);
+    font-size: 12px;
+  }
+
+  .checkbox-row input {
+    accent-color: var(--border-gold);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  /* 装備段階テーブル */
+  .slot-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .slot-table th {
+    font-size: 11px;
+    color: var(--text-dark);
+    font-weight: bold;
+    padding: 4px 6px 8px 6px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-metal);
+  }
+
+  .slot-table td {
+    padding: 6px 4px;
+    border-bottom: 1px solid #1a1c21;
+    vertical-align: middle;
+  }
+
+  .slot-name {
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px #000;
+  }
+
+  /* スロット種別毎の色表記定義 */
+  .kara-neck .slot-name { color: var(--color-kara-neck); }
+  .kara      .slot-name { color: var(--color-kara); }
+  .kunnou-m  .slot-name { color: var(--color-kunnou-m); }
+  .kunnou-s  .slot-name { color: var(--color-kunnou-s); }
+
+  select.challe-sel {
+    background: #111215;
+    border: 1px solid #434754;
+    color: var(--text-normal);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 6px;
+    outline: none;
+    width: 85px;
+    cursor: pointer;
+  }
+
+  select.challe-sel:focus {
+    border-color: var(--gold-bright);
+  }
+
+  .stack-val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--gold-bright);
+    text-align: center;
+    text-shadow: 0 0 4px rgba(238, 201, 128, 0.4);
+  }
+
+  /* 闇の精霊の火を宿す 巨大強化ボタン */
+  .calc-btn {
+    background: linear-gradient(180deg, var(--btn-fire-start) 0%, var(--btn-fire-end) 100%);
+    border: 1px solid #c94632;
+    outline: 1px solid #000;
+    color: #fff;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 3px #000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    transition: filter 0.2s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .calc-btn:hover {
+    filter: brightness(1.2);
+  }
+
+  .calc-btn:active {
+    transform: translateY(1px);
+    filter: brightness(0.9);
+  }
+
+  /* 計算結果ヘッダー */
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border-metal);
+    padding-bottom: 6px;
+  }
+
+  .result-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gold-bright);
+    letter-spacing: 0.5px;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* メインリザルトテーブル */
+  .table-scroll {
+    overflow-y: auto;
+    flex: 1;
+    border: 1px solid var(--border-metal);
+    background: #141519;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+  }
+
+  table.results {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  table.results th {
+    background: #1d1e24;
+    color: var(--gold-bright);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 10px 8px;
+    text-align: center;
+    border-bottom: 2px solid var(--border-metal);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+
+  table.results th:nth-child(2) { text-align: left; }
+
+  table.results td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #1c1d24;
+    text-align: center;
+    color: var(--text-normal);
+  }
+
+  table.results td:nth-child(2) { text-align: left; }
+
+  /* ホバー時にゲーム内のアイテムスロットを選択したような淡い光を灯す */
+  table.results tr:hover td {
+    background: rgba(238, 201, 128, 0.06);
+    border-bottom-color: rgba(238, 201, 128, 0.2);
+    cursor: pointer;
+  }
+
+  /* 順位バッジ */
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .rank-1 { background: linear-gradient(135deg, #eec980, #b3975d); color: #111; border-color: #fff; text-shadow: none; }
+  .rank-2 { background: linear-gradient(135deg, #b0b5c2, #6d7280); color: #111; border-color: #fff; text-shadow: none; }
+  .rank-3 { background: linear-gradient(135deg, #cc8352, #8c4e2b); color: #fff; }
+  .rank-n { background: #252730; color: var(--text-dark); }
+
+  .mono {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+  }
+  
+  .td-bold {
+    font-weight: bold;
+  }
+
+  /* 効率バーを黒い砂漠の経験値/強化エネルギー蓄積ゲージ調に */
+  .eff-bar-container {
+    background: #0b0c0e;
+    border: 1px solid #2d3038;
+    height: 6px;
+    width: 100%;
+    margin-top: 4px;
+    border-radius: 1px;
+  }
+
+  .eff-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #9650ee 0%, #ca80ff 100%);
+    box-shadow: 0 0 6px rgba(202, 128, 255, 0.6);
+    min-width: 1px;
+  }
+
+  .empty-msg {
+    text-align: center;
+    padding: 60px;
+    color: var(--text-dark);
+    font-size: 13px;
+  }
+
+  /* コスト・スロット種別テキスト用のカラーオーバーライド */
+  .tag-kara-neck { color: var(--color-kara-neck) !important; }
+  .tag-kara      { color: var(--color-kara) !important; }
+  .tag-kunnou-m  { color: var(--color-kunnou-m) !important; }
+  .tag-kunnou-s  { color: var(--color-kunnou-s) !important; }
+
+  /* スクロールバーのゲーム風カスタム */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0f1013;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #383b42;
+    border: 1px solid #1a1c21;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--border-gold);
+  }
+  </style>
+</head>
+<body>
+
+<div class="app-window">
+  <div class="window-header">
+    <div class="title">BLACK DESERT - ENHANCEMENT PLANNER</div>
   </div>
-  <div class="right-panel">
-    <div class="content">
-      <div class="result-header">
-        <span class="result-title">コスパ順 強化候補</span>
-        <span class="hint">💡 行をクリックで完了 → 次チャレへ</span>
+
+  <div class="app-container">
+    <div class="sidebar">
+      
+      <div class="section-box">
+        <div class="section-title">MATERIAL PRICES (M)</div>
+        <div class="price-grid">
+          <span class="price-label">夜明けの精髄 (カラザド素材)</span>
+          <div class="input-wrapper">
+            <input class="price-input" id="p-kara" value="50" type="number" min="0">
+            <span class="unit">M</span>
+          </div>
+          
+          <span class="price-label">太初のブラックストーン (君王素材)</span>
+          <div class="input-wrapper">
+            <input class="price-input" id="p-kunnou" value="60" type="number" min="0">
+            <span class="unit">M</span>
+          </div>
+          
+          <span class="price-label">クロン石</span>
+          <div class="input-wrapper">
+            <input class="price-input" id="p-cron" value="3" type="number" min="0">
+            <span class="unit">M</span>
+          </div>
+        </div>
       </div>
-      <div id="result-area"><div class="empty-msg">左パネルで設定後、「コスパ計算」を押してください</div></div>
+
+      <div class="section-box">
+        <div class="section-title">OPTIONS</div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="use-kakusei">
+          <label for="use-kakusei">君王覚醒スロットを使用する</label>
+        </div>
+      </div>
+
+      <div class="section-box" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="section-title">EQUIPMENT JOURNAL</div>
+        <div style="flex: 1; overflow-y: auto; padding-right: 2px;">
+          <table class="slot-table">
+            <thead>
+              <tr>
+                <th>スロット</th>
+                <th style="text-align:center; width: 95px;">現在の段階</th>
+                <th style="text-align:center; width: 50px;">スタック</th>
+              </tr>
+            </thead>
+            <tbody id="slot-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calculate()">⚔ 強化効率計算 ⚔</button>
+    </div>
+
+    <div class="main-panel">
+      <div class="result-header">
+        <span class="result-title">EFFICIENT REINFORCEMENT OPPORTUNITIES</span>
+        <span class="hint">💡 行をクリックすると、その強化が成功したとして段階を次に進めます。</span>
+      </div>
+      
+      <div class="table-scroll" id="result-area">
+        <div class="empty-msg">左側の条件を確認し、「効率強化ルートを算出」を実行してください。</div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
+// --- ロジックコアデータ群 (完全移植) ---
 const CHALLENGES = ["I","II","III","IV","V","VI","VII","VIII","IX","X"];
 
 const KARAZAD = [
@@ -168,7 +558,7 @@ const BASE_SLOTS = [
 ];
 const KAKUSEI_SLOT = {id:"kunnou_kaku",name:"君王覚醒(伝承)",atk:1,data:KUNNOU,cls:"kunnou-m"};
 
-let slotState = {}; // id -> {level: -1..9}
+let slotState = {}; 
 
 function getSlots(){
   const slots = [...BASE_SLOTS];
@@ -184,6 +574,7 @@ function calcExpected(row, pMat, pCron){
   return {expTries, expCost: costPer*expTries, ceilCost: costPer*ceilCount};
 }
 
+// 左サイドの入力リスト描画
 function renderSlots(){
   const slots = getSlots();
   const tbody = document.getElementById('slot-tbody');
@@ -197,7 +588,7 @@ function renderSlots(){
     tr.className=s.cls;
     tr.innerHTML=`
       <td><span class="slot-name">${s.name}</span></td>
-      <td>
+      <td style="text-align:center">
         <select class="challe-sel" data-sid="${s.id}" onchange="onChalleChange('${s.id}')">
           <option value="-1" ${cur===-1?'selected':''}>未強化</option>
           ${CHALLENGES.map((c,i)=>`<option value="${i}" ${cur===i?'selected':''}>${c}</option>`).join('')}
@@ -228,6 +619,7 @@ function getTag(id){
   return 'tag-kunnou-s';
 }
 
+// コスパソート・期待値計算ロジック
 function calculate(){
   const pKara  = parseFloat(document.getElementById('p-kara').value)||0;
   const pKunnou= parseFloat(document.getElementById('p-kunnou').value)||0;
@@ -255,26 +647,28 @@ function calculate(){
 
   const area=document.getElementById('result-area');
   if(!candidates.length){
-    area.innerHTML='<div class="empty-msg">🎉 全スロットがチャレXまで完了しています！</div>';
+    area.innerHTML='<div class="empty-msg">🎉 全スロットの強化段階が最大(チャレX)に達しました！</div>';
     return;
   }
 
   let rows=candidates.map((c,i)=>{
     const rankCls = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
-    const barW    = Math.round((c.eff/maxEff)*80);
+    const barW    = Math.round((c.eff/maxEff)*100);
     const tag     = getTag(c.id);
     return `<tr onclick="advance('${c.id}')">
       <td><span class="rank-badge ${rankCls}">${i+1}</span></td>
-      <td class="${tag}">${c.name}</td>
-      <td>${c.challe}</td>
-      <td class="mono">${c.stack}</td>
-      <td class="mono">+${c.atk}</td>
+      <td class="${tag}" style="font-weight:bold;">${c.name}</td>
+      <td class="td-bold">${c.challe}</td>
+      <td class="mono td-bold" style="color:var(--gold-bright);">${c.stack}</td>
+      <td class="mono td-bold">+${c.atk}</td>
       <td class="mono">${c.expTries.toFixed(1)}</td>
       <td class="mono">${c.expCost.toFixed(3)}</td>
       <td class="mono">${c.ceilCost.toFixed(3)}</td>
       <td>
-        <div class="mono" style="font-size:11px">${c.eff.toFixed(4)}</div>
-        <div class="eff-bar" style="width:${barW}%"></div>
+        <div class="mono td-bold" style="font-size:12px; color:var(--gold-bright);">${c.eff.toFixed(4)}</div>
+        <div class="eff-bar-container">
+          <div class="eff-bar" style="width:${barW}%"></div>
+        </div>
       </td>
     </tr>`;
   }).join('');
@@ -283,8 +677,15 @@ function calculate(){
     <table class="results">
       <thead>
         <tr>
-          <th>順位</th><th>スロット</th><th>チャレ</th><th>スタック</th>
-          <th>攻撃</th><th>期待回数</th><th>期待(G)</th><th>天井(G)</th><th>コスパ(/G)</th>
+          <th style="width:50px;">順位</th>
+          <th style="width:140px; text-align:left;">部位</th>
+          <th style="width:65px;">次段階</th>
+          <th style="width:70px;">スタック</th>
+          <th style="width:75px;">AP上昇値</th>
+          <th style="width:75px;">期待回数</th>
+          <th style="width:95px;">期待値(G)</th>
+          <th style="width:95px;">天井価格(G)</th>
+          <th>強化コスパ</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
@@ -292,6 +693,7 @@ function calculate(){
   `;
 }
 
+// 行クリックで段階を進める
 function advance(sid){
   const s = getSlots().find(x=>x.id===sid);
   if(!s) return;
@@ -306,5 +708,9 @@ document.getElementById('use-kakusei').addEventListener('change',()=>{
   renderSlots();
 });
 
+// 初期リファレンス呼び出し
 renderSlots();
 </script>
+
+</body>
+</html>
